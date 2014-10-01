@@ -224,8 +224,12 @@ SmokeRenderer::SmokeRenderer(int numParticles, int maxParticles, const int _rank
   m_particleProg = new GLSLProgram(particleVS, particlePS);
   m_particleAAProg = new GLSLProgram(particleVS, particleAAPS);
   //m_particleAAProg = new GLSLProgram(particleVS, splotchGS, particleAAPS, GL_POINTS, GL_TRIANGLE_STRIP);
-  //m_particleShadowProg = new GLSLProgram(particleVS, particleShadowPS);
-  m_particleShadowProg = new GLSLProgram(particleVS, splotchGS, particleShadowPS, GL_POINTS, GL_TRIANGLE_STRIP);
+  
+  //Original
+  m_particleShadowProg = new GLSLProgram(particleVS, particleShadowPS); 
+  
+  //With GS shaders
+  //m_particleShadowProg = new GLSLProgram(particleVS, splotchGS, particleShadowPS, GL_POINTS, GL_TRIANGLE_STRIP);
 
 #endif
 
@@ -682,13 +686,22 @@ void SmokeRenderer::drawPointSprites(GLSLProgram *prog, int start, int count, bo
     glEnableVertexAttribArray(vertexLoc);
     glVertexAttribPointer(vertexLoc , 1, GL_FLOAT, 0, 0, 0);
   }
+  
+  if (m_doClipping)
+  {
+    glEnable(GL_CLIP_DISTANCE0);
+    glEnable(GL_CLIP_DISTANCE1);
+    glEnable(GL_CLIP_DISTANCE2);
+    glEnable(GL_CLIP_DISTANCE3);
+    glEnable(GL_CLIP_DISTANCE4);
+    glEnable(GL_CLIP_DISTANCE5);
+  }  
+  
 
   prog->enable();
   glBindVertexArray(mSizeVao);
   prog->setUniform1f("pointRadius", mParticleRadius);
   prog->setUniform1f("ageScale", m_ageScale);
-  //  prog->setUniform1f("ageScale", 0);
-  // prog->setUniform1f("dustAlpha", 0);
   prog->setUniform1f("dustAlpha", m_dustAlpha);
   prog->setUniform1f("overBright", m_overBright);
   prog->setUniform1f("overBrightThreshold", m_overBrightThreshold);
@@ -742,6 +755,15 @@ void SmokeRenderer::drawPointSprites(GLSLProgram *prog, int start, int count, bo
   drawPoints(start, count, sorted);
 
   prog->disable();
+  
+  
+  glDisable(GL_CLIP_DISTANCE0);
+  glDisable(GL_CLIP_DISTANCE1);
+  glDisable(GL_CLIP_DISTANCE2);
+  glDisable(GL_CLIP_DISTANCE3);
+  glDisable(GL_CLIP_DISTANCE4);
+  glDisable(GL_CLIP_DISTANCE5);  
+  
 
   glDisable(GL_POINT_SPRITE_ARB);
   glDisable(GL_VERTEX_PROGRAM_POINT_SIZE_ARB);
